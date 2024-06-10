@@ -1,0 +1,94 @@
+{{ if eq .Values.global.elc "besu" -}}
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}  
+  namespace: {{ include "ethnode.namespace" . }}
+provisioner:  ebs.csi.aws.com
+volumeBindingMode: {{ .Values.storage.volumeBindingMode }}
+reclaimPolicy: {{ .Values.storage.reclaimPolicy }}
+allowVolumeExpansion: {{ .Values.storage.allowVolumeExpansion }}
+parameters:
+  {{- with .Values.storage.parameters }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+  labels:
+    name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+    {{ if .Values.global.snapshot.sot  -}}
+    "schedule/{{ .Values.global.snapshot.schedule | replace "@" ""}}": "enabled"
+    {{- end }}
+    {{- include "ethnode.labels" . | nindent 4 }}  
+  namespace: {{ include "ethnode.namespace" . }}
+spec: 
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage
+  resources: 
+    requests:
+      storage: {{ .Values.storage.size | quote }}
+  {{ if .Values.restore.enabled -}}
+  dataSource:
+    name: {{ .Values.restore.snapshot }}
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  {{- end }} 
+
+
+{{ if .Values.global.snapshot.sot  -}}
+
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-vsc
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}  
+  namespace: {{ include "ethnode.namespace" . }}
+driver: ebs.csi.aws.com
+deletionPolicy: Delete
+parameters:
+  tagSpecification_1: "name={{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}"
+  tagSpecification_2: "network={{ .Values.global.network }}"
+  tagSpecification_3: "elc=besu"
+  tagSpecification_4: "data-storage-format={{ .Values.settings.dataStorageFormat }}"
+  tagSpecification_5: "sync-mode={{ .Values.settings.syncMode }}"
+
+---
+apiVersion: snapscheduler.backube/v1
+kind: SnapshotSchedule
+metadata:
+  name:  {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-vss
+  namespace: {{ include "ethnode.namespace" . }}
+spec:
+  claimSelector:
+    matchLabels:
+      name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      "schedule/{{ .Values.global.snapshot.schedule | replace "@" ""}}": "enabled"
+      {{- include "ethnode.labels" . | nindent 6 }}      
+  schedule: "{{ .Values.global.snapshot.schedule }}"
+  retention:
+    # retained specified in hours. (168h = 1 week)
+    expires: "168h"
+    maxCount: 10  # optional
+  # set of labels can be added to each VolumeSnapshot object
+  snapshotTemplate:
+    labels:  
+      name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      {{- include "ethnode.labels" . | nindent 6 }}  
+    snapshotClassName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-vsc
+
+
+{{- end }}
+
+{{- end }}

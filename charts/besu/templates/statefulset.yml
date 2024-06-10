@@ -1,0 +1,155 @@
+{{ if eq .Values.global.elc "besu" -}}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}
+  namespace: {{ include "ethnode.namespace" . }}
+spec:
+  replicas: 1
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "ethnode.labels" . | nindent 6 }}
+      app.kubernetes.io/component: besu
+  serviceName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  template:
+    metadata:
+      labels:
+        {{- include "ethnode.labels" . | nindent 8 }}
+        app.kubernetes.io/component: besu
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.settings.metrics.port | quote}}
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.autoMount }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- with .Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- if or .Values.image.pullSecrets .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- include "ethnode.imagePullSecrets" . | nindent 8 }}
+      {{- end }}
+
+      initContainers:
+      - name: init
+        image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+        volumeMounts:
+          - name: besu-pip
+            mountPath: /pip
+          - name: besu-data
+            mountPath: {{ .Values.settings.dataPath }}
+        securityContext:
+          runAsUser: 0                        
+        command:
+        - /bin/bash
+        - -xec
+        - |
+          # get the existing public ip to associate with
+          PUBLIC_IP_TO_ASSOCIATE=$(curl ifconfig.io)
+          echo "PUBLIC_IP_TO_ASSOCIATE: $PUBLIC_IP_TO_ASSOCIATE"
+          echo -ne "$PUBLIC_IP_TO_ASSOCIATE" > /pip/ip
+          
+          # update permissions on the data volume
+          chown -R 1000:1000 {{ .Values.settings.dataPath }}
+
+      containers:
+      - name: besu
+        image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+        imagePullPolicy: {{ .Values.image.besu.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.resources.cpuRequest }}"
+            memory: "{{ .Values.resources.memRequest }}"
+          limits:
+            cpu: "{{ .Values.resources.cpuLimit }}"
+            memory: "{{ .Values.resources.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: LOG4J_CONFIGURATION_FILE
+            value: /etc/besu/log4j.xml
+        volumeMounts:
+          - name: besu-pip
+            mountPath: /pip
+            readOnly: true
+          - name: besu-config-toml
+            mountPath: /etc/besu
+            readOnly: true
+          - name: besu-data
+            mountPath: {{ .Values.settings.dataPath }}
+          - name: besu-jwt
+            mountPath: {{ .Values.global.jwt.secretPath }}
+            readOnly: true            
+        ports:
+          - name: elc-rpc
+            containerPort: {{ .Values.settings.rpc.port }}
+            protocol: TCP
+          - name: elc-ws
+            containerPort: {{ .Values.settings.ws.port }}
+            protocol: TCP
+          - name: elc-rlpx
+            containerPort: {{ .Values.settings.p2p.port }}
+            protocol: TCP
+          - name: elc-discovery
+            containerPort: {{ .Values.settings.p2p.port }}
+            protocol: UDP
+          - name: elc-metrics
+            containerPort: {{ .Values.settings.metrics.port }}
+            protocol: TCP
+          - name: elc-engine
+            containerPort: {{ .Values.settings.engine.rpcPort }}
+            protocol: TCP  
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            pip=$(cat /pip/ip)
+            /opt/besu/bin/besu \
+              --config-file=/etc/besu/config.toml \
+              --p2p-host=${pip}
+        livenessProbe:
+          httpGet:
+            path: "/liveness"
+            port: {{ .Values.settings.rpc.port }}
+          initialDelaySeconds: 120
+          periodSeconds: 30
+      
+      volumes:
+      - name: besu-config-toml
+        configMap:
+          name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+      - name: besu-jwt
+        secret:
+          secretName: {{ .Release.Name }}-ethnode-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt         
+      - name: besu-pip
+        emptyDir: {}
+      - name: besu-data
+        persistentVolumeClaim:
+          claimName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+
+{{- end }}
+

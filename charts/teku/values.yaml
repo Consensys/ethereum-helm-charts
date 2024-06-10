@@ -1,0 +1,105 @@
+fullnameOverride: ""
+
+network: test
+env: test
+snapshot:
+  # sot (source of truth) node, ie this is what we will create snapshots of
+  sot: false
+  # use the defaults of hourly, daily, weekly
+  schedule: "@weekly"
+restore:
+  enabled: false
+  # restore from a particular volumesnapshot
+  snapshot: ""
+  
+extraLabels: {}
+annotations: {}
+podAnnotations: {}
+affinity: {}
+nodeSelector: {}
+tolerations: {}
+securityContext: {}
+
+serviceAccount:
+  create: true
+  labels: {}
+  name:
+  annotations: {}
+  autoMount: true
+
+service:
+  annotations: {}
+  labels: {}
+  type: ClusterIP
+  ports:
+    - name: clc-libp2p
+      port: 9000
+      targetPort: clc-libp2p
+      protocol: TCP
+    - name: clc-discovery
+      port: 9000
+      targetPort: clc-discovery
+      protocol: UDP
+    - name: clc-rest
+      port: 5051
+      targetPort: clc-rest
+      protocol: TCP
+    - name: clc-metrics
+      port: 8008
+      targetPort: clc-metrics
+      protocol: TCP
+
+resources:
+  cpuLimit: 2
+  cpuRequest: 1
+  memLimit: "7G"
+  memRequest: "2G"
+
+image:
+  teku:
+    repository: consensys/teku
+    tag: 24.4.0-jdk21-amd64
+    imagePullPolicy: Always
+  hooks:
+    repository: consensys/quorum-k8s-hooks
+    tag: 22.04
+    imagePullPolicy: Always
+
+storage:
+  allowVolumeExpansion: true
+  volumeBindingMode: WaitForFirstConsumer
+  reclaimPolicy: Delete
+  size: "250Gi"
+  parameters:
+    type: gp3
+    csi.storage.k8s.io/fstype: xfs
+
+jwt:
+  secretPath: "/jwt"
+  hostAllowlist: ["*"]
+
+settings:
+  dataStorageMode: "minimal"
+  dataPath: "/data"
+  keysPath: "/tmp/key"
+  logging: INFO
+  env_opts: ""
+  p2p:
+    enabled: true
+    interface: "0.0.0.0"
+    port: 9000
+    advertisedPort: 9000
+    discovery: true
+  restApi:
+    enabled: true
+    docsEnabled: false
+    host: "0.0.0.0"
+    port: 5051
+    corsOrigins: ["*"]
+    allowlist: ["*"]
+  metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8008
+    allowlist: ["*"]
+    categories: ["BEACON", "JVM", "PROCESS", "DISCOVERY", "EVENTBUS", "EXECUTOR", "LIBP2P", "NETWORK", "STORAGE", "STORAGE_HOT_DB", "STORAGE_FINALIZED_DB", "REMOTE_VALIDATOR", "VALIDATOR", "VALIDATOR_PERFORMANCE"]

@@ -1,0 +1,56 @@
+{{ if eq .Values.global.clc "teku" -}}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.global.clc }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  namespace: {{ include "ethnode.namespace" . }}
+  labels:
+    {{- include "ethnode.labels" $ | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.service }}
+  {{- if .annotations }}
+  annotations:
+    {{- toYaml .annotations | nindent 6 }}
+  {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "ethnode.selectorLabels" . | nindent 4 }}
+  {{- with .Values.service }}
+  ports:
+    {{- toYaml .ports | nindent 4 }}
+  {{- end }}
+
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.global.clc }}-{{ .Values.global.network }}-{{ .Values.global.env }}-servicemonitor
+  namespace: {{ include "ethnode.namespace" . }}
+  labels:
+    {{- include "ethnode.labels" $ | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+    - {{ include "ethnode.namespace" . }}
+  selector:
+    matchLabels:  
+    {{- include "ethnode.selectorLabels" . | nindent 6 }}      
+  endpoints:
+  - port: clc-metrics
+    interval: 15s
+    path: /metrics
+    scheme: http
+    honorLabels: true
+
+
+{{- end }}

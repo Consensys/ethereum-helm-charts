@@ -1,0 +1,132 @@
+fullnameOverride: ""
+
+network: test
+env: test
+snapshot:
+  # sot (source of truth) node, ie this is what we will create snapshots of
+  sot: false
+  # use the defaults of hourly, daily, weekly
+  schedule: "@weekly"
+restore:
+  enabled: false
+  # restore from a particular volumesnapshot
+  snapshot: ""
+
+extraLabels: {}
+annotations: {}
+podAnnotations: {}
+affinity: {}
+nodeSelector: {}
+tolerations: {}
+securityContext: {}
+
+serviceAccount:
+  create: true
+  labels: {}
+  name:
+  annotations: {}
+  autoMount: true
+
+service:
+  annotations: {}
+  labels: {}
+  type: ClusterIP
+  ports:
+    - name: elc-rpc
+      port: 8545
+      targetPort: elc-rpc
+      protocol: TCP
+    - name: elc-ws
+      port: 8546
+      targetPort: elc-ws
+      protocol: TCP
+    - name: elc-rlpx
+      port: 30303
+      targetPort: elc-rlpx
+      protocol: TCP
+    - name: elc-discovery
+      port: 30303
+      targetPort: elc-discovery
+      protocol: UDP
+    - name: elc-metrics
+      port: 9545
+      targetPort: elc-metrics
+      protocol: TCP
+    - name: elc-engine
+      port: 8551
+      targetPort: elc-engine
+      protocol: TCP
+
+resources:
+  cpuLimit: 2
+  cpuRequest: 1
+  memLimit: "7G"
+  memRequest: "4G"
+
+image:
+  besu:
+    repository: hyperledger/besu
+    tag: 24.5.1-amd64
+    imagePullPolicy: Always
+  hooks:
+    repository: consensys/quorum-k8s-hooks
+    tag: 22.04
+    imagePullPolicy: Always
+    
+storage:
+  allowVolumeExpansion: true
+  volumeBindingMode: WaitForFirstConsumer
+  reclaimPolicy: Delete
+  size: "1000Gi"
+  parameters:
+    type: gp3
+    csi.storage.k8s.io/fstype: xfs
+
+jwt:
+  secretPath: "/jwt"
+  hostAllowlist: ["*"]
+
+settings:
+  privateKeyFilePath: "/tmp/key"
+  dataPath: "/data"
+  dataStorageFormat: "BONSAI"
+  syncMode: "X_CHECKPOINT"
+  logging: INFO
+  engine:
+    jwtDisabled: "false"
+    rpcEnabled: true
+    rpcPort: 8551
+  p2p:
+    enabled: true
+    addr: "0.0.0.0"
+    port: 30303
+    discovery: true
+    maxPeers: 25
+  rpc:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8545
+    api: ["DEBUG","ETH", "ADMIN", "WEB3", "NET", "TRACE", "TXPOOL"]
+    corsOrigins: ["all"]
+    authenticationEnabled: false
+  ws:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8546
+    api: ["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "TXPOOL"]
+    authenticationEnabled: false
+  graphql:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8547
+    corsOrigins: ["all"]
+  txPool:
+    priceBump: 10
+  http:
+    allowlist: ["*"]
+  metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 9545
+
+

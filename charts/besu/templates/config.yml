@@ -1,0 +1,107 @@
+{{ if eq .Values.global.elc "besu" -}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}
+  namespace: {{ include "ethnode.namespace" . }}
+data:
+  config.toml: |-
+
+    # data path
+    data-path={{ .Values.settings.dataPath | quote }}
+    network={{ .Values.global.network | quote }}
+    data-storage-format={{ .Values.settings.dataStorageFormat | quote }}
+    sync-mode={{ .Values.settings.syncMode | quote }}
+
+    # fleet
+    Xdns-enabled=true
+    Xdns-update-enabled=true
+    nat-method="NONE"
+    Xsnapsync-synchronizer-flat-db-healing-enabled=true
+    
+    logging={{ .Values.settings.logging | quote }}
+    node-private-key-file={{.Values.settings.privateKeyFilePath | quote }}
+    min-gas-price=1000
+    tx-pool-price-bump={{ .Values.settings.txPool.priceBump }}
+
+    # engine
+    engine-jwt-disabled={{ .Values.settings.engine.jwtDisabled }}
+    engine-jwt-secret="{{ .Values.global.jwt.secretPath }}/jwtSecret.hex"
+    engine-rpc-enabled={{ .Values.settings.engine.rpcEnabled }}
+    engine-rpc-port={{ .Values.settings.engine.rpcPort }}
+    engine-host-allowlist={{ .Values.global.jwt.hostAllowlist | toJson }}
+    
+    {{ if  .Values.settings.p2p.enabled -}}
+    # p2p network
+    p2p-enabled={{ .Values.settings.p2p.enabled }}
+    p2p-port={{ .Values.settings.p2p.port }}
+    discovery-enabled={{ .Values.settings.p2p.discovery }}
+    max-peers={{ .Values.settings.p2p.maxPeers }}
+    {{ end }}
+  
+    {{ if or .Values.settings.rpc.enabled .Values.settings.graphql.enabled .Values.settings.ws.enabled }}
+    host-allowlist={{ .Values.settings.http.allowlist | toJson }}
+    {{ end }}
+
+    {{ if  .Values.settings.rpc.enabled -}}
+    # rpc
+    rpc-http-enabled={{ .Values.settings.rpc.enabled }}
+    rpc-http-host={{ .Values.settings.rpc.host | quote }}
+    rpc-http-port={{ .Values.settings.rpc.port }}
+    rpc-http-api={{ .Values.settings.rpc.api | toJson }}
+    rpc-http-cors-origins={{ .Values.settings.rpc.corsOrigins | toJson }}
+    rpc-http-authentication-enabled={{ .Values.settings.rpc.authenticationEnabled }}
+    revert-reason-enabled=true
+    {{ end }}
+
+    {{ if  .Values.settings.graphql.enabled -}}
+    # graphql
+    graphql-http-enabled={{ .Values.settings.graphql.enabled }}
+    graphql-http-host={{ .Values.settings.graphql.host | quote }}
+    graphql-http-port={{ .Values.settings.graphql.port }}
+    graphql-http-cors-origins={{ .Values.settings.graphql.corsOrigins | toJson }}
+    {{ end }}
+
+    {{ if  .Values.settings.ws.enabled -}}
+    # ws
+    rpc-ws-enabled={{ .Values.settings.ws.enabled }}
+    rpc-ws-host={{ .Values.settings.ws.host | quote }}
+    rpc-ws-port={{ .Values.settings.ws.port }}
+    rpc-ws-api={{ .Values.settings.ws.api | toJson }}
+    rpc-ws-authentication-enabled={{ .Values.settings.ws.authenticationEnabled }}
+    {{ end }}
+
+    {{ if  .Values.settings.metrics.enabled -}}
+    # metrics
+    metrics-enabled={{ .Values.settings.metrics.enabled }}
+    metrics-host={{ .Values.settings.metrics.host | quote }}
+    metrics-port={{ .Values.settings.metrics.port }}
+    {{ end }}
+
+  log4j.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Configuration status="INFO" monitorInterval="5">
+
+      <Properties>
+        <Property name="root.log.level">INFO</Property>
+      </Properties>
+
+      <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+          <PatternLayout alwaysWriteExceptions="false" pattern='{"@timestamp":"%d{ISO8601}","level":"%level","thread":"%t","class":"%c{1}","message":"%msg","throwable":"%enc{%throwable}{JSON}"}%n'/>
+        </Console>
+      </Appenders>
+
+      <Loggers>
+        <Root level="${sys:root.log.level}">
+          <AppenderRef ref="Console" />
+        </Root>
+      </Loggers>
+
+    </Configuration>
+
+{{- end }}

@@ -1,0 +1,45 @@
+---
+{{- $root := . -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"    
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-hooks
+  namespace: {{ include "ethnode.namespace" . }}
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "ethnode.fullname" . }}-hooks-rb
+  namespace: {{ include "ethnode.namespace" . }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"  
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "ethnode.fullname" . }}-hooks-role
+subjects:
+- kind: ServiceAccount
+  namespace: {{ include "ethnode.namespace" . }}
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-hooks
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "ethnode.fullname" . }}-hooks-role
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"  
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "list", "update", "delete", "patch" ]

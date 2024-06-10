@@ -1,0 +1,12 @@
+---
+global:
+  env: dev
+  network: mainnet
+  elc: besu
+  clc: teku
+  snapshot:
+    sot: true
+    schedule: "@weekly"
+  restore:
+    enabled: false
+    snapshot: ""

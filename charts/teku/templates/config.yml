@@ -1,0 +1,92 @@
+{{ if eq .Values.global.clc "teku" -}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}
+  namespace: {{ include "ethnode.namespace" . }}
+data:
+  config.yml: |-
+
+    # network
+    network: {{ .Values.global.network | quote }}
+    p2p-private-key-file: {{ .Values.settings.keysPath | quote }} 
+    data-path: {{ .Values.settings.dataPath | quote }}
+    data-storage-mode: {{ .Values.settings.dataStorageMode | quote }}
+    logging: {{ .Values.settings.logging | quote }}
+    log-color-enabled: False
+
+    {{ if eq .Values.global.network "mainnet" -}}
+    initial-state: "https://sync-{{ .Values.global.network }}.beaconcha.in/eth/v2/debug/beacon/states/finalized"
+    {{ else -}}
+    initial-state: "https://checkpoint-sync.{{ .Values.global.network }}.ethpandaops.io/eth/v2/debug/beacon/states/finalized"
+    {{ end }}
+    
+    # engine
+    ee-endpoint: "http://{{ .Release.Name }}-{{ .Values.global.elc }}-{{ .Values.global.network }}-{{ .Values.global.env }}.{{ include "ethnode.namespace" . }}.svc.cluster.local:8551"
+    ee-jwt-secret-file: "{{ .Values.global.jwt.secretPath }}/jwtSecret.hex"
+
+    # interop
+    # TODO - check with Lucas if these can be hardcoded?
+    Xinterop-genesis-time: 0
+    Xinterop-owned-validator-start-index: 0
+    Xinterop-owned-validator-count: 64
+    Xinterop-number-of-validators: 64
+    Xinterop-enabled: False
+    validators-proposer-default-fee-recipient: "0x0000000000000000000000000000000000000000"
+    
+    {{ if  .Values.settings.p2p.enabled -}}
+    # p2p network
+    p2p-enabled: {{ .Values.settings.p2p.enabled }}
+    p2p-discovery-enabled: {{ .Values.settings.p2p.discovery }}
+    p2p-interface: {{ .Values.settings.p2p.interface | quote }}
+    p2p-port: {{ .Values.settings.p2p.port }}
+    p2p-advertised-port: {{ .Values.settings.p2p.advertisedPort }}
+    {{ end }}
+
+    {{ if  .Values.settings.restApi.enabled -}}
+    # beacon rest api
+    rest-api-enabled: {{ .Values.settings.restApi.enabled }}
+    rest-api-docs-enabled: {{ .Values.settings.restApi.docsEnabled }}
+    rest-api-interface: {{ .Values.settings.restApi.host | quote }}
+    rest-api-port: {{ .Values.settings.restApi.port }}
+    rest-api-cors-origins: {{ .Values.settings.restApi.corsOrigins | toJson }}
+    rest-api-host-allowlist: {{ .Values.settings.restApi.allowlist | toJson }}
+    {{ end }}
+
+    {{ if  .Values.settings.metrics.enabled -}}
+    # metrics
+    metrics-enabled: True
+    metrics-host-allowlist: {{ .Values.settings.metrics.allowlist | toJson }}
+    metrics-categories: {{ .Values.settings.metrics.categories | toJson }}
+    metrics-interface: {{ .Values.settings.metrics.host | quote }}
+    metrics-port: {{ .Values.settings.metrics.port }}
+    {{ end }}
+
+
+  log4j.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Configuration status="INFO" monitorInterval="5">
+
+      <Properties>
+        <Property name="root.log.level">INFO</Property>
+      </Properties>
+
+      <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+          <PatternLayout alwaysWriteExceptions="false" pattern='{"@timestamp":"%d{ISO8601}","level":"%level","thread":"%t","class":"%c{1}","message":"%replace{%msg}{[\p{Cntrl}&amp;&amp;[^\r\n]]}{}","throwable":"%enc{%throwable}{JSON}"}%n'/>
+        </Console>
+      </Appenders>
+
+      <Loggers>
+        <Root level="${sys:root.log.level}">
+          <AppenderRef ref="Console" />
+        </Root>
+      </Loggers>
+
+    </Configuration>
+
+{{ end }}

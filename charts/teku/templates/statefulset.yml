@@ -1,0 +1,149 @@
+{{ if eq .Values.global.clc "teku" -}}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  labels:
+    {{- include "ethnode.labels" . | nindent 4 }}
+  namespace: {{ include "ethnode.namespace" . }}
+spec:
+  replicas: 1
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "ethnode.labels" . | nindent 6 }}
+      app.kubernetes.io/component: teku
+  serviceName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  template:
+    metadata:
+      labels:
+        {{- include "ethnode.labels" . | nindent 8 }}
+        app.kubernetes.io/component: teku
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.settings.metrics.port | quote}}
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.autoMount }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- with .Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- if or .Values.image.pullSecrets .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- include "ethnode.imagePullSecrets" . | nindent 8 }}
+      {{- end }}
+
+      initContainers:
+      - name: init
+        image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+        volumeMounts:
+          - name: teku-pip
+            mountPath: /pip
+          - name: teku-data
+            mountPath: {{ .Values.settings.dataPath }}
+        securityContext:
+          runAsUser: 0                        
+        command:
+        - /bin/bash
+        - -xec
+        - |
+          # get the existing public ip to associate with
+          PUBLIC_IP_TO_ASSOCIATE=$(curl ifconfig.io)
+          echo "PUBLIC_IP_TO_ASSOCIATE: $PUBLIC_IP_TO_ASSOCIATE"
+          echo -ne "$PUBLIC_IP_TO_ASSOCIATE" > /pip/ip
+
+          # update permissions on the data volume
+          chown -R 1000:1000 {{ .Values.settings.dataPath }}
+
+      containers:
+      - name: teku
+        image: {{ .Values.image.teku.repository }}:{{ .Values.image.teku.tag }}
+        imagePullPolicy: {{ .Values.image.teku.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.resources.cpuRequest }}"
+            memory: "{{ .Values.resources.memRequest }}"
+          limits:
+            cpu: "{{ .Values.resources.cpuLimit }}"
+            memory: "{{ .Values.resources.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: LOG4J_CONFIGURATION_FILE
+            value: /etc/teku/log4j.xml
+        volumeMounts:
+          - name: teku-pip
+            mountPath: /pip
+            readOnly: true
+          - name: teku-config-yml
+            mountPath: /etc/teku
+            readOnly: true
+          - name: teku-data
+            mountPath: {{ .Values.settings.dataPath }}
+          - name: teku-jwt
+            mountPath: {{ .Values.global.jwt.secretPath }}
+            readOnly: true            
+        ports:
+          - name: clc-rest
+            containerPort: {{ .Values.settings.restApi.port }}
+            protocol: TCP
+          - name: clc-libp2p
+            containerPort: {{ .Values.settings.p2p.port }}
+            protocol: TCP
+          - name: clc-discovery
+            containerPort: {{ .Values.settings.p2p.port }}
+            protocol: UDP
+          - name: clc-metrics
+            containerPort: {{ .Values.settings.metrics.port }}
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            pip=$(cat /pip/ip)
+            /opt/teku/bin/teku \
+              --config-file=/etc/teku/config.yml \
+              --p2p-advertised-ip=${pip}
+        livenessProbe:
+          httpGet:
+            path: "/teku/v1/admin/liveness"
+            port: {{ .Values.settings.restApi.port }}
+          initialDelaySeconds: 120
+          periodSeconds: 30
+      
+      volumes:
+      - name: teku-config-yml
+        configMap:
+          name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+      - name: teku-jwt
+        secret:
+          secretName: {{ .Release.Name }}-ethnode-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt         
+      - name: teku-pip
+        emptyDir: {}
+      - name: teku-data
+        persistentVolumeClaim:
+          claimName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+
+{{- end }}
+

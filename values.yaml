@@ -1,0 +1,81 @@
+nameOverride: ""
+fullnameOverride: ""
+
+# pass values to subcharts
+global:
+  network: sepolia
+  env: dev
+  elc: besu
+  clc: teku
+  jwt:
+    secretPath: "/jwt"
+    hostAllowlist: ["*"]  
+  snapshot:
+    # sot (source of truth) node, ie this is what we will create snapshots of
+    sot: false
+    # use the defaults of hourly, daily, weekly
+    schedule: "@weekly"
+
+besu:
+  restore:
+    enabled: false
+    # restore from a particular volumesnapshot
+    snapshot: ""
+
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              workloadType: ethereum
+          topologyKey: kubernetes.io/hostname
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: ng
+            operator: In
+            values:
+            - ethereum
+
+  tolerations:
+    - key: ethereum
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+    - key: ethereum
+      operator: Equal
+      value: "true"
+      effect: NoExecute
+
+teku:
+  restore:
+    enabled: false
+    # restore from a particular volumesnapshot
+    snapshot: ""
+  
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              workloadType: ethereum
+          topologyKey: kubernetes.io/hostname
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: ng
+            operator: In
+            values:
+            - ethereum
+            
+  tolerations:
+    - key: ethereum
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+    - key: ethereum
+      operator: Equal
+      value: "true"
+      effect: NoExecute
