@@ -2,6 +2,22 @@ apiVersion: v1
 entries:
   ethnode:
   - apiVersion: v2
+    created: "2024-09-10T00:37:56.87229508Z"
+    dependencies:
+    - name: elc
+      repository: ""
+      version: 0.0.2
+    - name: clc
+      repository: ""
+      version: 0.0.2
+    description: An Ethereum Helm chart for Kubernetes
+    digest: 6aea62b06b49a3fd24f356497240b34655b19a7b3e08d13f41494a6069b59ede
+    name: ethnode
+    type: application
+    urls:
+    - https://github.com/Consensys/ethereum-helm-charts/releases/download/ethnode-0.1.2/ethnode-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     created: "2024-09-04T05:38:39.298584736Z"
     dependencies:
     - name: elc
@@ -33,4 +49,4 @@ entries:
     urls:
     - https://github.com/Consensys/ethereum-helm-charts/releases/download/ethnode-0.1.0/ethnode-0.1.0.tgz
     version: 0.1.0
-generated: "2024-09-04T05:38:39.298597319Z"
+generated: "2024-09-10T00:37:56.872312844Z"
