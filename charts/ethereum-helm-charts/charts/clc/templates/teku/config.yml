@@ -12,7 +12,7 @@ data:
 
   log4j.xml: |-
     <?xml version="1.0" encoding="UTF-8"?>
-    <Configuration status="INFO" monitorInterval="5">
+    <Configuration level="INFO" monitorInterval="5">
 
       <Properties>
         <Property name="root.log.level">INFO</Property>
