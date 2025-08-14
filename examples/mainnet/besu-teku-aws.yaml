@@ -24,6 +24,10 @@ elc:
     parameters:
       type: gp3
       csi.storage.k8s.io/fstype: xfs
+      # encrypted: "true"
+      # Tune gp3 performance if needed (defaults: 3000 IOPS / 125 MiB/s):
+      # iops: "6000"
+      # throughput: "250"           
   tolerations:
     - key: ethereum
       value: "true"
@@ -59,6 +63,10 @@ clc:
     parameters:
       type: gp3
       csi.storage.k8s.io/fstype: xfs
+      # encrypted: "true"
+      # Tune gp3 performance if needed (defaults: 3000 IOPS / 125 MiB/s):
+      # iops: "6000"
+      # throughput: "250"      
   tolerations:
     - key: ethereum
       value: "true"

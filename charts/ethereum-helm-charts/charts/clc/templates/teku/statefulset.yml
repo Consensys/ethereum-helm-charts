@@ -158,7 +158,7 @@ spec:
               --rest-api-host-allowlist={{ join "," .Values.settings.restApi.allowlist  }} \
               --metrics-enabled=true \
               --metrics-host-allowlist={{ join "," .Values.settings.metrics.allowlist  }} \
-              --metrics-categories={{ join "," .Values.settings.metrics.categories }} \
+              --metrics-categories=BEACON,JVM,PROCESS,DISCOVERY,EVENTBUS,EXECUTOR,LIBP2P,NETWORK,STORAGE,STORAGE_HOT_DB,STORAGE_FINALIZED_DB,VALIDATOR,VALIDATOR_DUTY,VALIDATOR_PERFORMANCE \
               --metrics-interface={{ .Values.settings.metrics.host | quote }} \
               --metrics-port={{ .Values.settings.metrics.port }}
 

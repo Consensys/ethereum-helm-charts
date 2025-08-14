@@ -7,12 +7,11 @@ metadata:
   name: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage
   labels:
     {{- include "ethnode-clc.labels" . | nindent 4 }}  
-  namespace: {{ include "ethnode.namespace" . }}
 volumeBindingMode: {{ .Values.storage.volumeBindingMode }}
 reclaimPolicy: {{ .Values.storage.reclaimPolicy }}
 {{- if eq .Values.global.provider "aws" }}
 allowVolumeExpansion: {{ .Values.storage.allowVolumeExpansion }}
-provisioner:  ebs.csi.aws.com
+provisioner: ebs.csi.aws.com
 parameters:
   {{- with .Values.storage.parameters }}
   {{- toYaml . | nindent 2 }}
@@ -33,18 +32,18 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage
-  namespace: {{ .Release.Namespace }}
   labels:
     type: local
 spec:
-  claimRef:
-    name: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Delete
   capacity:
     storage: {{ .Values.storage.size | quote }}
   accessModes:
     - ReadWriteOnce
   hostPath:
     path: "/tmp/{{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage"
+    type: DirectoryOrCreate
 
 {{- end }}
 
@@ -69,6 +68,7 @@ spec:
   {{- if or (eq .Values.global.provider "aws") (eq .Values.global.provider "azure") }}  
   storageClassName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage
   {{- else if eq .Values.global.provider "local" }}
+  storageClassName: ""
   volumeName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-storage
   {{- end }}
   resources: 

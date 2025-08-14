@@ -147,7 +147,7 @@ spec:
               --Xdns-enabled=true \
               --Xdns-update-enabled=true \
               --nat-method="NONE" \
-              --Xsnapsync-synchronizer-flat-db-healing-enabled=true \
+              --Xbonsai-full-flat-db-enabled=true \
               --p2p-enabled=true \
               --p2p-host=${pip} \
               --p2p-port={{ .Values.settings.p2p.port }} \

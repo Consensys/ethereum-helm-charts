@@ -15,6 +15,12 @@ This currently **only** supports beacon nodes, not validators
 | clc      | string | `"teku"`    |             |
 
 
+### Requirements
+1. You need `kube-prometheus-stack` or equivalent that installs the `ServiceMonitor` CRDs
+
+```
+helm install [RELEASE_NAME] oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack
+```
 
 ### Test the charts:
 local

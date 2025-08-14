@@ -6,22 +6,28 @@ global:
   elc: besu
   clc: teku
 
-besu:
-  # this is individual to each client coz each has a different volume snapshot
+elc:
+  image:
+    elc:
+      repository: hyperledger/besu
+      tag: latest
   restore:
     enabled: false
     snapshot: ""
-  affinity: {}
-  tolerations: {}
   storage:
     size: "5Gi"
+  tolerations: []
+  affinity: {}
 
-teku:
-  # this is individual to each client coz each has a different volume snapshot
+clc:
+  image:
+    clc:
+      repository: consensys/teku
+      tag: latest
   restore:
     enabled: false
     snapshot: ""
-  affinity: {}
-  tolerations: {}   
   storage:
     size: "5Gi"
+  tolerations: []
+  affinity: {}
