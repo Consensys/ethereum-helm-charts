@@ -1,0 +1,16 @@
+---
+global:
+  elc: besu
+  clc: nimbus
+
+elc:
+  image:
+    elc:
+      repository: hyperledger/besu
+      tag: latest
+
+clc:
+  image:
+    clc:
+      repository: statusim/nimbus-eth2
+      tag: multiarch-latest

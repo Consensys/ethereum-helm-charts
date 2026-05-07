@@ -1,10 +1,8 @@
 ---
 global:
-  provider: azure
+  provider: aws
   env: dev
   network: mainnet
-  elc: besu
-  clc: prysm
   snapshot:
     # sot (source of truth) node, ie this is what we will create snapshots of
     enabled: false
@@ -12,17 +10,18 @@ global:
     schedule: "@hourly"
 
 elc:
-  image:
-    elc:
-      repository: hyperledger/besu
-      tag: latest
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
     size: "1000Gi"
     parameters:
-      skuName: Premium_LRS
+      type: gp3
+      csi.storage.k8s.io/fstype: xfs
+      # encrypted: "true"
+      # Tune gp3 performance if needed (defaults: 3000 IOPS / 125 MiB/s):
+      # iops: "6000"
+      # throughput: "250"
   tolerations:
     - key: ethereum
       value: "true"
@@ -47,20 +46,18 @@ elc:
             - ethereum
 
 clc:
-  image:
-    clc:
-      repository: gcr.io/prysmaticlabs/prysm/beacon-chain
-      tag: latest
-  settings:
-    grpc:
-      port: 5052
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
     size: "250Gi"
     parameters:
-      skuName: Premium_LRS
+      type: gp3
+      csi.storage.k8s.io/fstype: xfs
+      # encrypted: "true"
+      # Tune gp3 performance if needed (defaults: 3000 IOPS / 125 MiB/s):
+      # iops: "6000"
+      # throughput: "250"
   tolerations:
     - key: ethereum
       value: "true"
@@ -82,4 +79,4 @@ clc:
           - key: workloadType
             operator: In
             values:
-            - ethereum      
+            - ethereum

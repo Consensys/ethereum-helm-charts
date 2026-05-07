@@ -114,3 +114,9 @@ settings:
     host: "0.0.0.0"
     port: 8008
     allowlist: ["*"]
+  checkpointSync:
+    enabled: true
+    mainnetUrl: "https://sync-mainnet.beaconcha.in"
+    testnetBaseUrl: "https://checkpoint-sync"
+    testnetDomain: "ethpandaops.io"
+    statePath: "/eth/v2/debug/beacon/states/finalized"

@@ -1,23 +1,18 @@
 ---
 global:
-  provider: local
-  env: dev
-  network: mainnet
-  elc: besu
+  elc: nethermind
   clc: teku
 
 elc:
   image:
     elc:
-      repository: hyperledger/besu
+      repository: nethermind/nethermind
       tag: latest
+  settings:
+    chainspecPath: chainspec/foundation.json
   restore:
     enabled: false
     snapshot: ""
-  storage:
-    size: "5Gi"
-  tolerations: []
-  affinity: {}
 
 clc:
   image:
@@ -27,7 +22,3 @@ clc:
   restore:
     enabled: false
     snapshot: ""
-  storage:
-    size: "5Gi"
-  tolerations: []
-  affinity: {}

@@ -63,7 +63,7 @@ spec:
         - -xec
         - |
           # get the existing public ip to associate with
-          PUBLIC_IP_TO_ASSOCIATE=$(curl ifconfig.io)
+          PUBLIC_IP_TO_ASSOCIATE=$(curl --retry 5 --retry-delay 2 -sf ifconfig.io) || { echo "ERROR: failed to get public IP"; exit 1; }
           echo "PUBLIC_IP_TO_ASSOCIATE: $PUBLIC_IP_TO_ASSOCIATE"
           echo -ne "$PUBLIC_IP_TO_ASSOCIATE" > /pip/ip
           

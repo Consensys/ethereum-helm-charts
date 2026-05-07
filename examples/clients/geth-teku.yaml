@@ -1,0 +1,19 @@
+---
+global:
+  elc: geth
+  clc: teku
+
+elc:
+  image:
+    elc:
+      repository: ethereum/client-go
+      tag: latest
+  settings:
+    logging: 3
+    syncMode: snap
+
+clc:
+  image:
+    clc:
+      repository: consensys/teku
+      tag: latest

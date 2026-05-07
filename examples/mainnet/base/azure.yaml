@@ -3,8 +3,6 @@ global:
   provider: azure
   env: dev
   network: mainnet
-  elc: besu
-  clc: teku
   snapshot:
     # sot (source of truth) node, ie this is what we will create snapshots of
     enabled: false
@@ -12,10 +10,6 @@ global:
     schedule: "@hourly"
 
 elc:
-  image:
-    elc:
-      repository: hyperledger/besu
-      tag: latest
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
@@ -47,10 +41,6 @@ elc:
             - ethereum
 
 clc:
-  image:
-    clc:
-      repository: consensys/teku
-      tag: latest
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
@@ -79,4 +69,4 @@ clc:
           - key: workloadType
             operator: In
             values:
-            - ethereum      
+            - ethereum

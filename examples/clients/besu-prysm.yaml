@@ -1,0 +1,19 @@
+---
+global:
+  elc: besu
+  clc: prysm
+
+elc:
+  image:
+    elc:
+      repository: hyperledger/besu
+      tag: latest
+
+clc:
+  image:
+    clc:
+      repository: gcr.io/prysmaticlabs/prysm/beacon-chain
+      tag: latest
+  settings:
+    grpc:
+      port: 5052

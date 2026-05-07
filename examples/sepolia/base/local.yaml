@@ -1,0 +1,17 @@
+---
+global:
+  provider: local
+  env: dev
+  network: sepolia
+
+elc:
+  storage:
+    size: "5Gi"
+  tolerations: []
+  affinity: {}
+
+clc:
+  storage:
+    size: "5Gi"
+  tolerations: []
+  affinity: {}

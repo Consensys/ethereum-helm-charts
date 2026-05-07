@@ -63,10 +63,10 @@ spec:
         - -xec
         - |
           # get the existing public ip to associate with
-          PUBLIC_IP_TO_ASSOCIATE=$(curl ifconfig.io)
+          PUBLIC_IP_TO_ASSOCIATE=$(curl --retry 5 --retry-delay 2 -sf ifconfig.io) || { echo "ERROR: failed to get public IP"; exit 1; }
           echo "PUBLIC_IP_TO_ASSOCIATE: $PUBLIC_IP_TO_ASSOCIATE"
           echo -ne "$PUBLIC_IP_TO_ASSOCIATE" > /pip/ip
-
+          
           # update permissions on the data volume
           chown -R 1000:1000 {{ .Values.settings.dataPath }}
 
@@ -133,7 +133,7 @@ spec:
               --logFormat=json \
               --execution.urls="http://{{ .Release.Name }}-{{ .Values.global.elc }}-{{ .Values.global.network }}-{{ .Values.global.env }}.{{ include "ethnode.namespace" . }}.svc.cluster.local:8551" \
               --jwt-secret="{{ .Values.global.jwt.secretPath }}/jwtSecret.hex" \
-              --checkpointSyncUrl="https://beaconstate-{{ .Values.global.network }}.chainsafe.io" \
+              --checkpointSyncUrl="{{ if eq .Values.global.network "mainnet" }}{{ .Values.settings.checkpointSync.mainnetUrl }}{{ else }}{{ .Values.settings.checkpointSync.testnetBaseUrl }}.{{ .Values.global.network }}.{{ .Values.settings.checkpointSync.testnetDomain }}{{ end }}" \
               --suggestedFeeRecipient="0x0000000000000000000000000000000000000000" \
               --port={{ .Values.settings.p2p.port }} \
               --listenAddress="0.0.0.0" \

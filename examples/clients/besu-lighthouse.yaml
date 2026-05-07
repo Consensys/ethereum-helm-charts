@@ -1,0 +1,19 @@
+---
+global:
+  elc: besu
+  clc: lighthouse
+
+elc:
+  image:
+    elc:
+      repository: hyperledger/besu
+      tag: latest
+
+clc:
+  image:
+    clc:
+      repository: sigp/lighthouse
+      tag: latest
+  settings:
+    grpc:
+      port: 5052

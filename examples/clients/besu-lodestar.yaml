@@ -1,0 +1,16 @@
+---
+global:
+  elc: besu
+  clc: lodestar
+
+elc:
+  image:
+    elc:
+      repository: hyperledger/besu
+      tag: latest
+
+clc:
+  image:
+    clc:
+      repository: chainsafe/lodestar
+      tag: latest

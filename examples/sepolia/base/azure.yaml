@@ -2,25 +2,17 @@
 global:
   provider: azure
   env: dev
-  network: mainnet
-  elc: besu
-  clc: lodestar
+  network: sepolia
   snapshot:
-    # sot (source of truth) node, ie this is what we will create snapshots of
     enabled: false
-    # use the defaults of hourly, daily, weekly
     schedule: "@hourly"
 
 elc:
-  image:
-    elc:
-      repository: hyperledger/besu
-      tag: latest
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
-    size: "1000Gi"
+    size: "500Gi"
     parameters:
       skuName: Premium_LRS
   tolerations:
@@ -47,15 +39,11 @@ elc:
             - ethereum
 
 clc:
-  image:
-    clc:
-      repository: chainsafe/lodestar
-      tag: latest
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
-    size: "250Gi"
+    size: "100Gi"
     parameters:
       skuName: Premium_LRS
   tolerations:
@@ -79,4 +67,4 @@ clc:
           - key: workloadType
             operator: In
             values:
-            - ethereum      
+            - ethereum

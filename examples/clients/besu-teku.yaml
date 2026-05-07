@@ -1,0 +1,16 @@
+---
+global:
+  elc: besu
+  clc: teku
+
+elc:
+  image:
+    elc:
+      repository: hyperledger/besu
+      tag: latest
+
+clc:
+  image:
+    clc:
+      repository: consensys/teku
+      tag: latest

@@ -59,14 +59,14 @@ spec:
         securityContext:
           runAsUser: 0                        
         command:
-        - /bin/sh
+        - /bin/bash
         - -xec
         - |
           # get the existing public ip to associate with
-          PUBLIC_IP_TO_ASSOCIATE=$(curl ifconfig.io)
+          PUBLIC_IP_TO_ASSOCIATE=$(curl --retry 5 --retry-delay 2 -sf ifconfig.io) || { echo "ERROR: failed to get public IP"; exit 1; }
           echo "PUBLIC_IP_TO_ASSOCIATE: $PUBLIC_IP_TO_ASSOCIATE"
           echo -ne "$PUBLIC_IP_TO_ASSOCIATE" > /pip/ip
-
+          
           # update permissions on the data volume
           chown -R 1000:1000 {{ .Values.settings.dataPath }}
 
@@ -122,11 +122,20 @@ spec:
           - -c
         args:
           - |
-            exec
-
             pip=$(cat /pip/ip)
-            
-            /home/user/nimbus-eth2/build/nimbus_beacon_node \
+
+            # Run trustedNodeSync on first start only — beacon/ subdir is created by it
+            if [ ! -d "{{ .Values.settings.dataPath }}/beacon" ]; then
+              echo "No existing beacon data, running trustedNodeSync from {{ if eq .Values.global.network "mainnet" }}{{ .Values.settings.checkpointSync.mainnetUrl }}{{ else }}{{ .Values.settings.checkpointSync.testnetBaseUrl }}.{{ .Values.global.network }}.{{ .Values.settings.checkpointSync.testnetDomain }}{{ end }}"
+              /home/user/nimbus-eth2/build/nimbus_beacon_node trustedNodeSync \
+                --network={{ .Values.global.network }} \
+                --data-dir={{ .Values.settings.dataPath | quote }} \
+                --trusted-node-url="{{ if eq .Values.global.network "mainnet" }}{{ .Values.settings.checkpointSync.mainnetUrl }}{{ else }}{{ .Values.settings.checkpointSync.testnetBaseUrl }}.{{ .Values.global.network }}.{{ .Values.settings.checkpointSync.testnetDomain }}{{ end }}" \
+                --backfill=false \
+                --non-interactive
+            fi
+
+            exec /home/user/nimbus-eth2/build/nimbus_beacon_node \
               --network={{ .Values.global.network }} \
               --data-dir={{ .Values.settings.dataPath | quote }} \
               --log-level={{ lower .Values.settings.logging | quote }} \

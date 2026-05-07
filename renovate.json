@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": ["github-actions", "helmv3"],
+  "ignorePaths": [
+    ".venv/**",
+    "collections/**"
+  ],
+  "dependencyDashboard": false,
+  "packageRules": [
+    {
+      "description": "Pin all GitHub Actions to SHA digests",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "minimumReleaseAge": "7 days",
+      "groupName": "Renovatebot GHA Updates"
+    }
+  ]
+}

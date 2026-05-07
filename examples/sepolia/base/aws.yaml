@@ -1,31 +1,21 @@
 ---
 global:
-  provider: azure
+  provider: aws
   env: dev
-  network: mainnet
-  elc: geth
-  clc: teku
+  network: sepolia
   snapshot:
-    # sot (source of truth) node, ie this is what we will create snapshots of
     enabled: false
-    # use the defaults of hourly, daily, weekly
     schedule: "@hourly"
 
 elc:
-  image:
-    elc:
-      repository: ethereum/client-go
-      tag: latest
-  settings:
-    logging: 3
-    syncMode: snap
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
-    size: "1000Gi"
+    size: "500Gi"
     parameters:
-      skuName: Premium_LRS
+      type: gp3
+      csi.storage.k8s.io/fstype: xfs
   tolerations:
     - key: ethereum
       value: "true"
@@ -50,17 +40,14 @@ elc:
             - ethereum
 
 clc:
-  image:
-    clc:
-      repository: consensys/teku
-      tag: latest
   storage:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
-    size: "250Gi"
+    size: "100Gi"
     parameters:
-      skuName: Premium_LRS
+      type: gp3
+      csi.storage.k8s.io/fstype: xfs
   tolerations:
     - key: ethereum
       value: "true"
@@ -82,4 +69,4 @@ clc:
           - key: workloadType
             operator: In
             values:
-            - ethereum      
+            - ethereum
