@@ -71,8 +71,8 @@ image:
     tag: latest
     imagePullPolicy: Always    
   hooks:
-    repository: consensys/quorum-k8s-hooks
-    tag: 22.04
+    repository: consensys/ethereum-k8s-hooks
+    tag: 1.36.0
     imagePullPolicy: Always
 
 storage:

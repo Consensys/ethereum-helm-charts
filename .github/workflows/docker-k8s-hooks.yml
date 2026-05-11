@@ -1,0 +1,62 @@
+name: docker-k8s-hooks
+
+on:
+  workflow_dispatch:
+    inputs:
+      kubectl_version:
+        description: "kubectl version to bake in (e.g. 1.36.0)"
+        required: false
+        default: "1.36.0"
+
+env:
+  IMAGE_NAME: consensys/ethereum-k8s-hooks
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: dockerhub    
+    permissions:
+      contents: read
+      id-token: write # required for keyless cosign signing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a  # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd  # v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        id: build-push
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7.1
+        with:
+          context: docker/k8s-hooks
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            KUBECTL_VERSION=${{ inputs.kubectl_version }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ inputs.kubectl_version }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003  # v4.1.1
+
+      - name: Sign image with cosign (keyless)
+        env:
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+        run: |
+          cosign sign --yes \
+            ${{ env.IMAGE_NAME }}:${{ inputs.kubectl_version }}@${DIGEST} \
+            ${{ env.IMAGE_NAME }}:latest@${DIGEST}
