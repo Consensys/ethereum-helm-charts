@@ -26,7 +26,7 @@ spec:
       restartPolicy: "OnFailure"
       containers:
         - name: post-delete-hook
-          image: consensys/quorum-k8s-hooks:22.04
+          image: consensys/ethereum-k8s-hooks:1.36.0
           imagePullPolicy: Always
           securityContext:
             runAsUser: 0
