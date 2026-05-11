@@ -64,8 +64,8 @@ image:
     tag: latest
     imagePullPolicy: Always
   hooks:
-    repository: consensys/quorum-k8s-hooks
-    tag: 22.04
+    repository: ubuntu
+    tag: 24.04
     imagePullPolicy: Always
 
 storage:

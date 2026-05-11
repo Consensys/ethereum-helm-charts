@@ -1,0 +1,112 @@
+---
+global:
+  provider: aws
+  env: dev
+  network: mainnet
+  snapshot:
+    # sot (source of truth) node, ie this is what we will create snapshots of
+    enabled: false
+    # use the defaults of hourly, daily, weekly
+    schedule: "@hourly"
+
+elc:
+  resources:
+    cpuRequest: 2
+    cpuLimit: 3
+    memRequest: "8G"
+    memLimit: "12G"
+  storage:
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+    size: "1000Gi"
+    parameters:
+      type: gp3
+      csi.storage.k8s.io/fstype: xfs
+      # encrypted: "true"
+      # Tune gp3 performance if needed (defaults: 3000 IOPS / 125 MiB/s):
+      # iops: "6000"
+      # throughput: "250"
+  tolerations:
+    - key: ethereum
+      value: "true"
+      effect: NoExecute
+    - key: ethereum
+      value: "true"
+      effect: NoSchedule
+    - key: eth_armd64
+      value: "true"
+      effect: NoExecute
+    - key: eth_arm64
+      value: "true"
+      effect: NoSchedule      
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              workloadType: ethereum
+          topologyKey: kubernetes.io/hostname
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: workloadType
+            operator: In
+            values:
+            - ethereum
+          - key: architecture
+            operator: In
+            values:
+            - arm64
+
+clc:
+  resources:
+    cpuRequest: 1
+    cpuLimit: 2
+    memRequest: "4G"
+    memLimit: "6G"
+  storage:
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+    size: "250Gi"
+    parameters:
+      type: gp3
+      csi.storage.k8s.io/fstype: xfs
+      # encrypted: "true"
+      # Tune gp3 performance if needed (defaults: 3000 IOPS / 125 MiB/s):
+      # iops: "6000"
+      # throughput: "250"
+  tolerations:
+    - key: ethereum
+      value: "true"
+      effect: NoExecute
+    - key: ethereum
+      value: "true"
+      effect: NoSchedule
+    - key: eth_arm64
+      value: "true"
+      effect: NoExecute
+    - key: eth_arm64
+      value: "true"
+      effect: NoSchedule  
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              workloadType: ethereum
+          topologyKey: kubernetes.io/hostname
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: workloadType
+            operator: In
+            values:
+            - ethereum
+          - key: architecture
+            operator: In
+            values:
+            - arm64
