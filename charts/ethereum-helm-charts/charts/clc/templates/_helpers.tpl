@@ -73,8 +73,13 @@ app.kubernetes.io/name: {{ include "ethnode-clc.name" . }}
 app.kubernetes.io/release: {{ .Release.Name }}
 app.kubernetes.io/namespace: {{ .Release.Namespace }}
 ethereum/clc: {{ .Values.global.clc }}
+ethereum/clc_version: {{ .Values.image.clc.tag | trunc 63 | quote }}
+ethereum/elc: {{ .Values.global.elc }}
 ethereum/env: {{ .Values.global.env }}
 ethereum/network: {{ .Values.global.network }}
+{{- if .Values.global.owner }}
+ethereum/owner: {{ .Values.global.owner }}
+{{- end }}
 {{- end }}
 
 {{/*
