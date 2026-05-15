@@ -74,7 +74,6 @@ app.kubernetes.io/release: {{ .Release.Name }}
 app.kubernetes.io/namespace: {{ .Release.Namespace }}
 ethereum/elc: {{ .Values.global.elc }}
 ethereum/elc_version: {{ .Values.image.elc.tag | trunc 63 | quote }}
-ethereum/clc: {{ .Values.global.clc }}
 ethereum/env: {{ .Values.global.env }}
 ethereum/network: {{ .Values.global.network }}
 {{- if .Values.global.owner }}
@@ -149,6 +148,14 @@ Return if ingress supports pathType.
 */}}
 {{- define "ethnode-elc.ingress.supportsPathType" -}}
 {{- or (eq (include "ethnode-elc.ingress.isStable" .) "true") (and (eq (include "ethnode-elc.ingress.apiVersion" .) "networking.k8s.io/v1beta1") (semverCompare ">= 1.18-0" .Capabilities.KubeVersion.Version)) }}
+{{- end }}
+
+{{/*
+Canonical resource name for ELC-owned resources, distinct from CLC resources.
+Appends -elc to the shared resource name prefix to avoid name collisions in ArgoCD.
+*/}}
+{{- define "ethnode-elc.resourceName" -}}
+{{- printf "%s-elc-%s-%s-%s-%s" .Values.global.env (include "ethnode.elcCode" .) (include "ethnode.clcCode" .) .Values.global.network .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end }}
 
 {{/*

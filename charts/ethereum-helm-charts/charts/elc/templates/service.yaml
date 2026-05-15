@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  name: {{ include "ethnode-elc.resourceName" . }}
   namespace: {{ include "ethnode.namespace" . }}
   labels:
     {{- include "ethnode-elc.labels" $ | nindent 4 }}
@@ -30,7 +30,7 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-servicemonitor
+  name: {{ include "ethnode-elc.resourceName" . }}-servicemonitor
   namespace: {{ include "ethnode.namespace" . }}
   labels:
     {{- include "ethnode-elc.labels" $ | nindent 4 }}
@@ -50,6 +50,32 @@ spec:
     path: /metrics
     scheme: http
     honorLabels: true
+    relabelings:
+      - sourceLabels: [__meta_kubernetes_pod_label_ethereum_elc, __meta_kubernetes_pod_label_ethereum_elc_version]
+        separator: ":"
+        targetLabel: el_client
+        replacement: "$1:"
+      - sourceLabels: [__meta_kubernetes_pod_label_ethereum_network]
+        targetLabel: network
+      - sourceLabels: [__meta_kubernetes_pod_label_ethereum_owner]
+        targetLabel: owner
+      - sourceLabels: [__meta_kubernetes_pod_label_ethereum_env]
+        targetLabel: env
+      - sourceLabels: [__meta_kubernetes_pod_label_vpc]
+        regex: "(.+)"
+        targetLabel: vpc
+      - sourceLabels: [__meta_kubernetes_pod_label_vnet]
+        regex: "(.+)"
+        targetLabel: vnet
+      - sourceLabels: [__meta_kubernetes_service_name]
+        targetLabel: instance
+      - action: labeldrop
+        regex: job
+    {{- with .Values.service.monitor }}
+    {{- if .relabelings }}
+    {{- toYaml .relabelings | nindent 4 }}
+    {{- end }}
+    {{- end }}
   {{- with .Values.service.monitor }}
   {{- if and (.podTargetLabels) (eq (kindOf .podTargetLabels) "slice" ) }}
   podTargetLabels: {{ .podTargetLabels }}

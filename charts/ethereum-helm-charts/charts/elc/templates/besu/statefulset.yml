@@ -4,7 +4,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  name: {{ include "ethnode-elc.resourceName" . }}
   labels:
     {{- include "ethnode-elc.labels" . | nindent 4 }}
   namespace: {{ include "ethnode.namespace" . }}
@@ -17,7 +17,7 @@ spec:
     matchLabels:
       {{- include "ethnode-elc.labels" . | nindent 6 }}
       app.kubernetes.io/component: {{ .Values.global.elc }}
-  serviceName: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  serviceName: {{ include "ethnode-elc.resourceName" . }}
   template:
     metadata:
       labels:
@@ -28,7 +28,7 @@ spec:
         prometheus.io/port: {{ .Values.settings.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      serviceAccountName: {{ include "ethnode-elc.resourceName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.autoMount }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -188,15 +188,15 @@ spec:
       volumes:
       - name: besu-config-toml
         configMap:
-          name: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+          name: {{ include "ethnode-elc.resourceName" . }}-config
       - name: elc-jwt
         secret:
-          secretName: {{ .Release.Name }}-ethnode-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt         
+          secretName: {{ include "ethnode.resourceName" . }}-jwt         
       - name: elc-pip
         emptyDir: {}
       - name: elc-data
         persistentVolumeClaim:
-          claimName: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+          claimName: {{ include "ethnode-elc.resourceName" . }}-pvc
 
 {{- end }}
 

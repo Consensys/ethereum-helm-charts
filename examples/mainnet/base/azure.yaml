@@ -39,6 +39,17 @@ elc:
             operator: In
             values:
             - ethereum
+  service:
+    monitor:
+      podTargetLabels:
+        - "ethereum/elc"
+        - "ethereum/elc_version"
+        - "ethereum/clc"
+        - "ethereum/clc_version"
+        - "ethereum/network"
+        - "ethereum/owner"
+        - "ethereum/env"
+        - vnet
 
 clc:
   storage:
@@ -70,3 +81,15 @@ clc:
             operator: In
             values:
             - ethereum
+
+  service:
+    monitor:
+      podTargetLabels:
+        - "ethereum/elc"
+        - "ethereum/elc_version"
+        - "ethereum/clc"
+        - "ethereum/clc_version"
+        - "ethereum/network"
+        - "ethereum/owner"
+        - "ethereum/env"
+        - vnet

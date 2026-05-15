@@ -19,7 +19,7 @@ elc:
     allowVolumeExpansion: true
     volumeBindingMode: WaitForFirstConsumer
     reclaimPolicy: Delete
-    size: "1000Gi"
+    size: "1500Gi"
     parameters:
       type: gp3
       csi.storage.k8s.io/fstype: xfs
@@ -59,6 +59,17 @@ elc:
             operator: In
             values:
             - arm64
+  service:
+    monitor:
+      podTargetLabels:
+        - "ethereum/elc"
+        - "ethereum/elc_version"
+        - "ethereum/clc"
+        - "ethereum/clc_version"
+        - "ethereum/network"
+        - "ethereum/owner"
+        - "ethereum/env"
+        - vpc
 
 clc:
   resources:
@@ -110,3 +121,15 @@ clc:
             operator: In
             values:
             - arm64
+
+  service:
+    monitor:
+      podTargetLabels:
+        - "ethereum/elc"
+        - "ethereum/elc_version"
+        - "ethereum/clc"
+        - "ethereum/clc_version"
+        - "ethereum/network"
+        - "ethereum/owner"
+        - "ethereum/env"
+        - vpc

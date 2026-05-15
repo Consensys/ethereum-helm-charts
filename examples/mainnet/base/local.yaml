@@ -9,9 +9,29 @@ elc:
     size: "5Gi"
   tolerations: []
   affinity: {}
+  service:
+    monitor:
+      podTargetLabels:
+        - "ethereum/elc"
+        - "ethereum/elc_version"
+        - "ethereum/clc"
+        - "ethereum/clc_version"
+        - "ethereum/network"
+        - "ethereum/owner"
+        - "ethereum/env"
 
 clc:
   storage:
     size: "5Gi"
   tolerations: []
   affinity: {}
+  service:
+    monitor:
+      podTargetLabels:
+        - "ethereum/elc"
+        - "ethereum/elc_version"
+        - "ethereum/clc"
+        - "ethereum/clc_version"
+        - "ethereum/network"
+        - "ethereum/owner"
+        - "ethereum/env"

@@ -8,7 +8,8 @@ global:
   env: dev
   elc: besu
   clc: teku
-  owner: protocols
+  team: protocols
+  owner: bob.the.builder
   jwt:
     secretPath: "/jwt"
     hostAllowlist: ["*"]  

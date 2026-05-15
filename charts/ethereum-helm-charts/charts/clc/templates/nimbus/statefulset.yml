@@ -4,7 +4,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  name: {{ include "ethnode-clc.resourceName" . }}
   labels:
     {{- include "ethnode-clc.labels" . | nindent 4 }}
   namespace: {{ include "ethnode.namespace" . }}
@@ -17,7 +17,7 @@ spec:
     matchLabels:
       {{- include "ethnode-clc.labels" . | nindent 6 }}
       app.kubernetes.io/component: "{{ .Values.global.clc }}"
-  serviceName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  serviceName: {{ include "ethnode-clc.resourceName" . }}
   template:
     metadata:
       labels:
@@ -28,7 +28,7 @@ spec:
         prometheus.io/port: {{ .Values.settings.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      serviceAccountName: {{ include "ethnode-clc.resourceName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.autoMount }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -145,7 +145,7 @@ spec:
               --doppelganger-detection \
               --validator-monitor-auto \
               --suggested-fee-recipient="0x0000000000000000000000000000000000000000" \
-              --web3-url="http://{{ .Release.Name }}-{{ .Values.global.elc }}-{{ .Values.global.network }}-{{ .Values.global.env }}.{{ include "ethnode.namespace" . }}.svc.cluster.local:8551" \
+              --web3-url="http://{{ include "ethnode-elc.resourceName" . }}.{{ include "ethnode.namespace" . }}.svc.cluster.local:8551" \
               --jwt-secret="{{ .Values.global.jwt.secretPath }}/jwtSecret.hex" \
               --enr-auto-update=false \
               --tcp-port={{ .Values.settings.p2p.port }} \
@@ -163,12 +163,12 @@ spec:
       volumes:
       - name: clc-jwt
         secret:
-          secretName: {{ .Release.Name }}-ethnode-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt         
+          secretName: {{ include "ethnode.resourceName" . }}-jwt         
       - name: clc-pip
         emptyDir: {}
       - name: clc-data
         persistentVolumeClaim:
-          claimName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+          claimName: {{ include "ethnode-clc.resourceName" . }}-pvc
 
 {{- end }}
 

@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "ethnode-elc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+  name: {{ include "ethnode-elc.resourceName" . }}-config
   labels:
     {{- include "ethnode-elc.labels" . | nindent 4 }}
   namespace: {{ include "ethnode.namespace" . }}

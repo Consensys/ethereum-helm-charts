@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-post-delete-hook
+  name: {{ include "ethnode.resourceName" . }}-post-delete-hook
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-delete
@@ -22,7 +22,7 @@ spec:
         app.kubernetes.io/component: job
         app.kubernetes.io/release: {{ .Release.Name }}
     spec:
-      serviceAccountName: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-hooks
+      serviceAccountName: {{ include "ethnode.resourceName" . }}-hooks
       restartPolicy: "OnFailure"
       containers:
         - name: post-delete-hook
@@ -36,17 +36,17 @@ spec:
           args:
             - |
 
-              echo "{{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }} post-delete hook ..."
+              echo "{{ include "ethnode.resourceName" . }} post-delete hook ..."
 
               echo "create jwt secret ..."
               rm /tmp/jwtSecret.hex
               openssl rand -hex 32 | tr -d "\n" > /tmp/jwtSecret.hex
 
               # create a secret if it doesn't already exist
-              kubectl get secret {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
+              kubectl get secret {{ include "ethnode.resourceName" . }}-jwt --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
               if [ $? -ne 0 ]; then
-                kubectl create secret generic {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt --namespace {{ .Release.Namespace }} --from-file=jwtSecret.hex=/tmp/jwtSecret.hex 
+                kubectl create secret generic {{ include "ethnode.resourceName" . }}-jwt --namespace {{ .Release.Namespace }} --from-file=jwtSecret.hex=/tmp/jwtSecret.hex 
               fi
 
-              echo "{{ template "ethnode.fullname" . }} post-delete hook completed"
+              echo "{{ include "ethnode.resourceName" . }} post-delete hook complete..."
 

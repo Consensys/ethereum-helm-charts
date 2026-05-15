@@ -69,7 +69,7 @@ image:
   elc:
     repository: none/none
     tag: latest
-    imagePullPolicy: Always    
+    imagePullPolicy: Always
   hooks:
     repository: consensys/ethereum-k8s-hooks
     tag: 1.36.0

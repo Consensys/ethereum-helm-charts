@@ -1,5 +1,28 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
+Two-letter shortcodes for ELC clients.
+*/}}
+{{- define "ethnode.elcCode" -}}
+{{- $codes := dict "besu" "bu" "geth" "go" "nethermind" "nm" -}}
+{{- default .Values.global.elc (index $codes .Values.global.elc) -}}
+{{- end }}
+
+{{/*
+Two-letter shortcodes for CLC clients.
+*/}}
+{{- define "ethnode.clcCode" -}}
+{{- $codes := dict "teku" "tk" "nimbus" "nb" "lighthouse" "lh" "prysm" "pr" "lodestar" "ls" -}}
+{{- default .Values.global.clc (index $codes .Values.global.clc) -}}
+{{- end }}
+
+{{/*
+Canonical resource name prefix: env-elcCode-clcCode-network-releaseName
+*/}}
+{{- define "ethnode.resourceName" -}}
+{{- printf "%s-%s-%s-%s-%s" .Values.global.env (include "ethnode.elcCode" .) (include "ethnode.clcCode" .) .Values.global.network .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end }}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "ethnode.name" -}}

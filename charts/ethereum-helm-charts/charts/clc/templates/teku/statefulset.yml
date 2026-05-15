@@ -4,7 +4,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  name: {{ include "ethnode-clc.resourceName" . }}
   labels:
     {{- include "ethnode-clc.labels" . | nindent 4 }}
   namespace: {{ include "ethnode.namespace" . }}
@@ -17,7 +17,7 @@ spec:
     matchLabels:
       {{- include "ethnode-clc.labels" . | nindent 6 }}
       app.kubernetes.io/component: "{{ .Values.global.clc }}"
-  serviceName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+  serviceName: {{ include "ethnode-clc.resourceName" . }}
   template:
     metadata:
       labels:
@@ -28,7 +28,7 @@ spec:
         prometheus.io/port: {{ .Values.settings.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}
+      serviceAccountName: {{ include "ethnode-clc.resourceName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.autoMount }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -137,7 +137,7 @@ spec:
               {{- if .Values.settings.checkpointSync.enabled }}
               --initial-state="{{ if eq .Values.global.network "mainnet" }}{{ .Values.settings.checkpointSync.mainnetUrl }}{{ else }}{{ .Values.settings.checkpointSync.testnetBaseUrl }}.{{ .Values.global.network }}.{{ .Values.settings.checkpointSync.testnetDomain }}{{ end }}{{ .Values.settings.checkpointSync.statePath }}" \
               {{- end }}
-              --ee-endpoint="http://{{ .Release.Name }}-{{ .Values.global.elc }}-{{ .Values.global.network }}-{{ .Values.global.env }}.{{ include "ethnode.namespace" . }}.svc.cluster.local:8551" \
+              --ee-endpoint="http://{{ include "ethnode-elc.resourceName" . }}.{{ include "ethnode.namespace" . }}.svc.cluster.local:8551" \
               --ee-jwt-secret-file="{{ .Values.global.jwt.secretPath }}/jwtSecret.hex" \
               --Xinterop-genesis-time=0 \
               --Xinterop-owned-validator-start-index=0 \
@@ -174,15 +174,15 @@ spec:
       volumes:
       - name: teku-config-yml
         configMap:
-          name: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-config
+          name: {{ include "ethnode-clc.resourceName" . }}-config
       - name: clc-jwt
         secret:
-          secretName: {{ .Release.Name }}-ethnode-{{ .Values.global.network }}-{{ .Values.global.env }}-jwt         
+          secretName: {{ include "ethnode.resourceName" . }}-jwt         
       - name: clc-pip
         emptyDir: {}
       - name: clc-data
         persistentVolumeClaim:
-          claimName: {{ include "ethnode-clc.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-pvc
+          claimName: {{ include "ethnode-clc.resourceName" . }}-pvc
 
 {{- end }}
 

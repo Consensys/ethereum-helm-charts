@@ -8,33 +8,33 @@ metadata:
   annotations:
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook": "pre-install,pre-delete,post-delete"    
-  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-hooks
+  name: {{ include "ethnode.resourceName" . }}-hooks
   namespace: {{ include "ethnode.namespace" . }}
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "ethnode.fullname" . }}-hooks-rb
+  name: {{ include "ethnode.resourceName" . }}-hooks-rb
   namespace: {{ include "ethnode.namespace" . }}
   annotations:
     "helm.sh/hook-delete-policy": before-hook-creation
-    "helm.sh/hook": "pre-install,pre-delete,post-delete"  
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "ethnode.fullname" . }}-hooks-role
+  name: {{ include "ethnode.resourceName" . }}-hooks-role
 subjects:
 - kind: ServiceAccount
   namespace: {{ include "ethnode.namespace" . }}
-  name: {{ include "ethnode.fullname" . }}-{{ .Values.global.network }}-{{ .Values.global.env }}-hooks
+  name: {{ include "ethnode.resourceName" . }}-hooks
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "ethnode.fullname" . }}-hooks-role
+  name: {{ include "ethnode.resourceName" . }}-hooks-role
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook-delete-policy": before-hook-creation
